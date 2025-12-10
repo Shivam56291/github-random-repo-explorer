@@ -25,8 +25,24 @@ A modern **React Native Expo app** that fetches and displays a random public Git
 
 ## Screenshots
 
-![App Screenshot 1](./assets/Screenshot_20251210-181529.png)
-![App Screenshot 2](./assets/Screenshot_20251210-181612.png)
+<p align="center">
+  <img src="./assets/Screenshot_20251210-181529.png" alt="App Screenshot 1" width="300"/>
+  <br>
+  <sub>Screenshot 1: Home screen</sub>
+</p>
+
+<p align="center">
+  <img src="./assets/Screenshot_20251210-181612.png.png" alt="App Screenshot 2" width="300"/>
+  <br>
+  <sub>Screenshot 2: GitHub screen</sub>
+</p>
+
+<p align="center">
+  <img src="./assets/Screenshot_20251210-182408.png" alt="App Screenshot 2" width="300"/>
+  <br>
+  <sub>Screenshot 3: Random Repo Result</sub>
+</p>
+
 
 ---
 
