@@ -1,50 +1,47 @@
-# Welcome to your Expo app 👋
+# GitHub Random Repo Explorer
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A modern **React Native Expo app** that fetches and displays a random public GitHub repository for any GitHub username. The app features smooth **Lottie animations** for loading, success, and error states, providing a professional and interactive mobile experience.
 
-## Get started
+---
 
-1. Install dependencies
+## Features
 
-   ```bash
-   npm install
-   ```
+- Search for GitHub users by username
+- Fetch and display a random public repository
+- View repository details:
+  - Name
+  - Description
+  - Stars ⭐
+  - Forks 🍴
+  - Repository link 🔗
+- Smooth Lottie animations:
+  - Loading spinner while fetching
+  - Success animation when a repo is fetched
+  - Error animation for invalid usernames or network issues
+- Fully responsive UI with ScrollView support
+- Modern and clean card-based design
 
-2. Start the app
+---
 
-   ```bash
-   npx expo start
-   ```
+## Screenshots
 
-In the output, you'll find options to open the app in a
+![App Screenshot 1](./assets/Screenshot_20251210-181529.png)
+![App Screenshot 2](./assets/Screenshot_20251210-181612.png)
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+---
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## Installation
 
-## Get a fresh project
-
-When you're ready, run:
+1. Clone the repository:
 
 ```bash
-npm run reset-project
+git clone https://github.com/<your-username>/github-random-repo-explorer.git
+cd github-random-repo-explorer
+
+## Usage
+
+1. Enter a GitHub username in the input field.
+2. Tap **Get Random Repo**.
+3. View the randomly selected repository with its details.
+4. Tap the repository link to open it in your browser.
 ```
-
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
