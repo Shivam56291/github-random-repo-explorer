@@ -1,6 +1,11 @@
+import { useState } from "react";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 
+import CustomAlert from "../components/CustomAlert";
+
 export default function Index() {
+  const [alertVisible, setAlertVisible] = useState(false);
+
   return (
     <View style={styles.container}>
       <View style={styles.card}>
@@ -17,7 +22,7 @@ export default function Index() {
 
         <Pressable
           style={({ pressed }) => [styles.button, pressed && { opacity: 0.7 }]}
-          onPress={() => alert("Switch to GitHub tab to start exploring!")}
+          onPress={() => setAlertVisible(true)}
         >
           <Text style={styles.buttonText}>Get Started</Text>
         </Pressable>
@@ -30,6 +35,11 @@ export default function Index() {
         <Text style={styles.featureItem}>• Description & repo link</Text>
         <Text style={styles.featureItem}>• Modern card UI & smooth UX</Text>
       </View>
+
+      <CustomAlert
+        visible={alertVisible}
+        onClose={() => setAlertVisible(false)}
+      />
     </View>
   );
 }
