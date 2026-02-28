@@ -1,11 +1,12 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
+  Animated,
+  Easing,
   Modal,
   Pressable,
   StyleSheet,
   Text,
   View,
-  Animated,
 } from "react-native";
 
 type CustomAlertProps = {
@@ -14,47 +15,84 @@ type CustomAlertProps = {
 };
 
 export default function CustomAlert({ visible, onClose }: CustomAlertProps) {
-  const opacity = useRef(new Animated.Value(0)).current;
-  const scale = useRef(new Animated.Value(0.9)).current;
+  const [showModal, setShowModal] = useState(visible);
+
+  const backdropOpacity = useRef(new Animated.Value(0)).current;
+  const scale = useRef(new Animated.Value(0.8)).current;
+  const translateY = useRef(new Animated.Value(60)).current;
 
   useEffect(() => {
     if (visible) {
+      setShowModal(true);
+
+      scale.setValue(0.8);
+      translateY.setValue(60);
+
       Animated.parallel([
-        Animated.timing(opacity, {
+        Animated.timing(backdropOpacity, {
           toValue: 1,
-          duration: 200,
+          duration: 250,
+          easing: Easing.out(Easing.ease),
           useNativeDriver: true,
         }),
         Animated.spring(scale, {
           toValue: 1,
-          friction: 7,
+          damping: 10,
+          stiffness: 120,
+          mass: 0.8,
+          useNativeDriver: true,
+        }),
+        Animated.spring(translateY, {
+          toValue: 0,
+          damping: 10,
+          stiffness: 120,
+          mass: 0.8,
           useNativeDriver: true,
         }),
       ]).start();
-    } else {
+    } else if (showModal) {
       Animated.parallel([
-        Animated.timing(opacity, {
+        Animated.timing(backdropOpacity, {
           toValue: 0,
-          duration: 150,
+          duration: 200,
           useNativeDriver: true,
         }),
         Animated.timing(scale, {
-          toValue: 0.9,
-          duration: 150,
+          toValue: 0.85,
+          duration: 200,
+          easing: Easing.in(Easing.ease),
           useNativeDriver: true,
         }),
-      ]).start();
+        Animated.timing(translateY, {
+          toValue: 40,
+          duration: 200,
+          easing: Easing.in(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ]).start(() => {
+        setShowModal(false);
+      });
     }
   }, [visible]);
 
+  if (!showModal) return null;
+
   return (
-    <Modal transparent visible={visible} animationType="none">
-      <Animated.View style={[styles.overlay, { opacity }]}>
+    <Modal transparent visible={showModal} animationType="none">
+      <Animated.View
+        style={[
+          styles.overlay,
+          { opacity: backdropOpacity },
+        ]}
+      >
+        {/* Backdrop Press to Close */}
+        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
+
         <Animated.View
           style={[
             styles.card,
             {
-              transform: [{ scale }],
+              transform: [{ scale }, { translateY }],
             },
           ]}
         >
@@ -76,39 +114,45 @@ export default function CustomAlert({ visible, onClose }: CustomAlertProps) {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.4)",
+    backgroundColor: "rgba(0,0,0,0.45)",
     justifyContent: "center",
     alignItems: "center",
   },
   card: {
-    width: "80%",
+    width: "82%",
     backgroundColor: "white",
-    borderRadius: 20,
-    padding: 25,
+    borderRadius: 24,
+    padding: 28,
     alignItems: "center",
+    elevation: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 20,
   },
   title: {
     fontSize: 20,
-    fontWeight: "bold",
+    fontWeight: "700",
     color: "#007AFF",
-    marginBottom: 10,
+    marginBottom: 12,
     textAlign: "center",
   },
   message: {
     fontSize: 16,
     color: "#555",
     textAlign: "center",
-    marginBottom: 20,
+    marginBottom: 24,
+    lineHeight: 22,
   },
   button: {
     backgroundColor: "#007AFF",
-    paddingVertical: 12,
-    paddingHorizontal: 30,
-    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 32,
+    borderRadius: 14,
   },
   buttonText: {
     color: "white",
     fontSize: 16,
-    fontWeight: "bold",
+    fontWeight: "600",
   },
 });

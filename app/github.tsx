@@ -1,8 +1,9 @@
+import { LinearGradient } from "expo-linear-gradient";
 import LottieView from "lottie-react-native";
 import { useState } from "react";
 import {
-  Button,
   Linking,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -36,7 +37,7 @@ export default function Settings() {
 
     try {
       const response = await fetch(
-        `https://api.github.com/users/${username}/repos`
+        `https://api.github.com/users/${username}/repos`,
       );
       const data = await response.json();
 
@@ -74,11 +75,26 @@ export default function Settings() {
           value={username}
           onChangeText={setUsername}
         />
-        <Button
-          title="Get Random Repo"
+        <Pressable
           onPress={fetchRepo}
           disabled={loading}
-        />
+          style={({ pressed }) => [
+            styles.buttonWrapper,
+            pressed && { opacity: 0.85 },
+            loading && { opacity: 0.6 },
+          ]}
+        >
+          <LinearGradient
+            colors={["#0A84FF", "#0066CC"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.button}
+          >
+            <Text style={styles.buttonText}>
+              {loading ? "Loading..." : "Get Random Repo"}
+            </Text>
+          </LinearGradient>
+        </Pressable>
       </View>
 
       {/* Loading Animation */}
@@ -93,14 +109,20 @@ export default function Settings() {
 
       {/* Error Animation */}
       {error && !loading && (
-        <View style={{ alignItems: "center", marginTop: 20 }}>
+        <View style={styles.errorCard}>
+          <View style={styles.errorBadge}>
+            <Text style={styles.errorIcon}>⚠</Text>
+          </View>
+
+          <Text style={styles.errorTitle}>Something went wrong</Text>
+          <Text style={styles.errorMessage}>{error}</Text>
+
           <LottieView
             source={require("../assets/error-animation.json")}
             autoPlay
             loop={false}
-            style={styles.lottie}
+            style={styles.errorLottie}
           />
-          <Text style={styles.error}>{error}</Text>
         </View>
       )}
 
@@ -195,8 +217,79 @@ const styles = StyleSheet.create({
     color: "black",
     marginBottom: 10,
   },
+  buttonWrapper: {
+    borderRadius: 10,
+    overflow: "hidden",
+    marginTop: 5,
+  },
+
+  button: {
+    paddingVertical: 14,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#007AFF",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 5,
+  },
+
+  buttonText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
   repoDescription: { color: "#555", marginBottom: 15 },
   repoStats: { fontSize: 16, fontWeight: "600", color: "black", marginTop: 5 },
   repoLink: { fontSize: 14, color: "#007AFF", marginTop: 10 },
   lottie: { width: 150, height: 150, alignSelf: "center", marginTop: 20 },
+  errorCard: {
+    marginTop: 25,
+    padding: 20,
+    borderRadius: 16,
+    backgroundColor: "#FFF5F5",
+    borderWidth: 1,
+    borderColor: "#FFD6D6",
+    alignItems: "center",
+    shadowColor: "#FF3B30",
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+
+  errorBadge: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: "#FFE5E5",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+
+  errorIcon: {
+    fontSize: 22,
+    color: "#FF3B30",
+    fontWeight: "bold",
+  },
+
+  errorTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#B00020",
+    marginBottom: 5,
+  },
+
+  errorMessage: {
+    fontSize: 15,
+    color: "#7A1C1C",
+    textAlign: "center",
+    marginBottom: 15,
+  },
+
+  errorLottie: {
+    width: 120,
+    height: 120,
+  },
 });
