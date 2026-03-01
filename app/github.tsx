@@ -1,7 +1,9 @@
 import { LinearGradient } from "expo-linear-gradient";
+import { useFocusEffect } from "expo-router";
 import LottieView from "lottie-react-native";
-import { useState } from "react";
+import React, { useRef, useState } from "react";
 import {
+  Animated,
   Linking,
   Pressable,
   ScrollView,
@@ -27,6 +29,7 @@ export default function Settings() {
 
   const fetchRepo = async () => {
     if (!username.trim()) {
+      setRepo(null);
       setError("Please enter a username");
       return;
     }
@@ -60,103 +63,134 @@ export default function Settings() {
     }
   };
 
+  const opacity = useRef(new Animated.Value(0)).current;
+  const translateX = useRef(new Animated.Value(50)).current;
+
+  useFocusEffect(
+    React.useCallback(() => {
+      opacity.setValue(0);
+      translateX.setValue(50);
+
+      Animated.parallel([
+        Animated.timing(opacity, {
+          toValue: 1,
+          duration: 400,
+          useNativeDriver: true,
+        }),
+        Animated.spring(translateX, {
+          toValue: 0,
+          friction: 8,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }, []),
+  );
+
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={{ flexGrow: 1 }}
+    <Animated.View
+      style={{
+        flex: 1,
+        opacity,
+        transform: [{ translateX }],
+      }}
     >
-      <Text style={styles.title}>GitHub Repo Explorer</Text>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={{ flexGrow: 1 }}
+      >
+        <Text style={styles.title}>GitHub Repo Explorer</Text>
 
-      <View style={styles.card}>
-        <Text style={styles.label}>GitHub Username</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Enter username (e.g. torvalds)"
-          value={username}
-          onChangeText={setUsername}
-        />
-        <Pressable
-          onPress={fetchRepo}
-          disabled={loading}
-          style={({ pressed }) => [
-            styles.buttonWrapper,
-            pressed && { opacity: 0.85 },
-            loading && { opacity: 0.6 },
-          ]}
-        >
-          <LinearGradient
-            colors={["#0A84FF", "#0066CC"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.button}
+        <View style={styles.card}>
+          <Text style={styles.label}>GitHub Username</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter username (e.g. torvalds)"
+            value={username}
+            onChangeText={setUsername}
+          />
+          <Pressable
+            onPress={fetchRepo}
+            disabled={loading}
+            style={({ pressed }) => [
+              styles.buttonWrapper,
+              pressed && { opacity: 0.85 },
+              loading && { opacity: 0.6 },
+            ]}
           >
-            <Text style={styles.buttonText}>
-              {loading ? "Loading..." : "Get Random Repo"}
-            </Text>
-          </LinearGradient>
-        </Pressable>
-      </View>
+            <LinearGradient
+              colors={["#0A84FF", "#0066CC"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.button}
+            >
+              <Text style={styles.buttonText}>
+                {loading ? "Loading..." : "Get Random Repo"}
+              </Text>
+            </LinearGradient>
+          </Pressable>
+        </View>
 
-      {/* Loading Animation */}
-      {loading && (
-        <LottieView
-          source={require("../assets/github-spinner.json")}
-          autoPlay
-          loop
-          style={styles.lottie}
-        />
-      )}
+        {/* Loading Animation */}
+        {loading && (
+          <LottieView
+            source={require("../assets/github-spinner.json")}
+            autoPlay
+            loop
+            style={styles.lottie}
+          />
+        )}
 
-      {/* Error Animation */}
-      {error && !loading && (
-        <View style={styles.errorCard}>
-          <View style={styles.errorBadge}>
-            <Text style={styles.errorIcon}>⚠</Text>
+        {/* Error Animation */}
+        {error && !loading && (
+          <View style={styles.errorCard}>
+            <View style={styles.errorBadge}>
+              <Text style={styles.errorIcon}>⚠</Text>
+            </View>
+
+            <Text style={styles.errorTitle}>Something went wrong</Text>
+            <Text style={styles.errorMessage}>{error}</Text>
+
+            <LottieView
+              source={require("../assets/error-animation.json")}
+              autoPlay
+              loop={false}
+              style={styles.errorLottie}
+            />
           </View>
+        )}
 
-          <Text style={styles.errorTitle}>Something went wrong</Text>
-          <Text style={styles.errorMessage}>{error}</Text>
-
-          <LottieView
-            source={require("../assets/error-animation.json")}
-            autoPlay
-            loop={false}
-            style={styles.errorLottie}
-          />
-        </View>
-      )}
-
-      {/* Repo Result */}
-      {repo && !loading && (
-        <View style={styles.repoCard}>
-          <Text style={styles.repoName}>{repo.name}</Text>
-          <Text style={styles.repoDescription}>
-            {repo.description || "No description available"}
-          </Text>
-          <Text style={styles.repoStats}>
-            ⭐ Stars: {repo.stargazers_count}
-          </Text>
-          <Text style={styles.repoStats}>🍴 Forks: {repo.forks_count}</Text>
-          <Text
-            style={styles.repoLink}
-            onPress={() => Linking.openURL(repo.html_url)}
-          >
-            🔗 Visit Repo
-          </Text>
-          <LottieView
-            source={require("../assets/success-animation.json")}
-            autoPlay
-            loop={false}
-            style={{
-              width: 120,
-              height: 120,
-              alignSelf: "center",
-              marginTop: 10,
-            }}
-          />
-        </View>
-      )}
-    </ScrollView>
+        {/* Repo Result */}
+        {repo && !loading && (
+          <View style={styles.repoCard}>
+            <Text style={styles.repoName}>{repo.name}</Text>
+            <Text style={styles.repoDescription}>
+              {repo.description || "No description available"}
+            </Text>
+            <Text style={styles.repoStats}>
+              ⭐ Stars: {repo.stargazers_count}
+            </Text>
+            <Text style={styles.repoStats}>🍴 Forks: {repo.forks_count}</Text>
+            <Text
+              style={styles.repoLink}
+              onPress={() => Linking.openURL(repo.html_url)}
+            >
+              🔗 Visit Repo
+            </Text>
+            <LottieView
+              source={require("../assets/success-animation.json")}
+              autoPlay
+              loop={false}
+              style={{
+                width: 120,
+                height: 120,
+                alignSelf: "center",
+                marginTop: 10,
+              }}
+            />
+          </View>
+        )}
+      </ScrollView>
+    </Animated.View>
   );
 }
 
@@ -245,19 +279,19 @@ const styles = StyleSheet.create({
   repoLink: { fontSize: 14, color: "#007AFF", marginTop: 10 },
   lottie: { width: 150, height: 150, alignSelf: "center", marginTop: 20 },
   errorCard: {
-    marginTop: 25,
-    padding: 20,
-    borderRadius: 16,
+    marginTop: 20,
+    paddingVertical: 15,
+    paddingHorizontal: 16,
+    borderRadius: 14,
     backgroundColor: "#FFF5F5",
     borderWidth: 1,
     borderColor: "#FFD6D6",
     alignItems: "center",
     shadowColor: "#FF3B30",
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 4,
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
   },
-
   errorBadge: {
     width: 50,
     height: 50,
@@ -275,21 +309,21 @@ const styles = StyleSheet.create({
   },
 
   errorTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "700",
     color: "#B00020",
-    marginBottom: 5,
+    marginBottom: 3,
   },
 
   errorMessage: {
-    fontSize: 15,
+    fontSize: 14,
     color: "#7A1C1C",
     textAlign: "center",
-    marginBottom: 15,
+    marginBottom: 10,
   },
 
   errorLottie: {
-    width: 120,
-    height: 120,
+    width: 100,
+    height: 100,
   },
 });
