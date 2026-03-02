@@ -1,13 +1,13 @@
 import { Ionicons } from "@expo/vector-icons";
-import { Tabs } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
-import { View, Text, StyleSheet } from "react-native";
+import { Tabs } from "expo-router";
+import { StyleSheet, Text, View } from "react-native";
 
 export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        animation: 'fade',
+        animation: "fade",
         headerBackground: () => (
           <LinearGradient
             colors={["#007AFF", "#005BBB"]}
@@ -61,6 +61,21 @@ export default function TabLayout() {
           ),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="logo-github" color={color} size={size} />
+          ),
+        }}
+      />
+
+      <Tabs.Screen
+        name="tracker"
+        options={{
+          headerTitle: () => (
+            <View style={styles.headerTitleContainer}>
+              <Ionicons name="stats-chart" size={20} color="#fff" />
+              <Text style={styles.headerText}> Tracker</Text>
+            </View>
+          ),
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="stats-chart" color={color} size={size} />
           ),
         }}
       />

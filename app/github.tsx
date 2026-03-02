@@ -162,30 +162,53 @@ export default function Settings() {
         {/* Repo Result */}
         {repo && !loading && (
           <View style={styles.repoCard}>
-            <Text style={styles.repoName}>{repo.name}</Text>
+            {/* Header Row */}
+            <View style={styles.repoHeader}>
+              <View style={styles.repoNameContainer}>
+                <Text numberOfLines={1} style={styles.repoName}>
+                  {repo.name}
+                </Text>
+                <Text style={styles.publicBadge}>Public</Text>
+              </View>
+            </View>
+
+            {/* Description */}
             <Text style={styles.repoDescription}>
-              {repo.description || "No description available"}
+              {repo.description ||
+                "No description available for this repository."}
             </Text>
-            <Text style={styles.repoStats}>
-              ⭐ Stars: {repo.stargazers_count}
-            </Text>
-            <Text style={styles.repoStats}>🍴 Forks: {repo.forks_count}</Text>
-            <Text
-              style={styles.repoLink}
+
+            {/* Stats Row */}
+            <View style={styles.statsRow}>
+              <View style={styles.statBox}>
+                <Text style={styles.statNumber}>{repo.stargazers_count}</Text>
+                <Text style={styles.statLabel}>Stars</Text>
+              </View>
+
+              <View style={styles.statDivider} />
+
+              <View style={styles.statBox}>
+                <Text style={styles.statNumber}>{repo.forks_count}</Text>
+                <Text style={styles.statLabel}>Forks</Text>
+              </View>
+            </View>
+
+            {/* Visit Button */}
+            <Pressable
               onPress={() => Linking.openURL(repo.html_url)}
+              style={({ pressed }) => [
+                styles.visitButton,
+                pressed && { opacity: 0.85 },
+              ]}
             >
-              🔗 Visit Repo
-            </Text>
+              <Text style={styles.visitButtonText}>Visit Repository</Text>
+            </Pressable>
+
             <LottieView
               source={require("../assets/success-animation.json")}
               autoPlay
               loop={false}
-              style={{
-                width: 120,
-                height: 120,
-                alignSelf: "center",
-                marginTop: 10,
-              }}
+              style={styles.successLottie}
             />
           </View>
         )}
@@ -236,20 +259,106 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   repoCard: {
-    backgroundColor: "white",
-    marginTop: 25,
-    padding: 20,
-    borderRadius: 12,
+    backgroundColor: "#fff",
+    marginTop: 30,
+    padding: 22,
+    borderRadius: 18,
     shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 5,
+    shadowOpacity: 0.08,
+    shadowRadius: 20,
+    elevation: 8,
   },
-  repoName: {
-    fontSize: 22,
-    fontWeight: "bold",
-    color: "black",
+
+  repoHeader: {
     marginBottom: 10,
+  },
+
+  repoNameContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+
+  repoName: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#111",
+    flex: 1,
+  },
+
+  publicBadge: {
+    backgroundColor: "#EAF3FF",
+    color: "#007AFF",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 20,
+    fontSize: 12,
+    fontWeight: "600",
+    marginLeft: 10,
+  },
+
+  repoDescription: {
+    fontSize: 14,
+    color: "#666",
+    lineHeight: 20,
+    marginBottom: 20,
+  },
+
+  statsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-around",
+    backgroundColor: "#F7F9FC",
+    paddingVertical: 16,
+    borderRadius: 14,
+    marginBottom: 20,
+  },
+
+  statBox: {
+    alignItems: "center",
+  },
+
+  statNumber: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#007AFF",
+  },
+
+  statLabel: {
+    fontSize: 13,
+    color: "#555",
+    marginTop: 4,
+  },
+
+  statDivider: {
+    width: 1,
+    height: 40,
+    backgroundColor: "#ddd",
+  },
+
+  visitButton: {
+    backgroundColor: "#007AFF",
+    paddingVertical: 14,
+    borderRadius: 14,
+    alignItems: "center",
+    shadowColor: "#007AFF",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 6,
+  },
+
+  visitButtonText: {
+    color: "#fff",
+    fontWeight: "700",
+    fontSize: 15,
+  },
+
+  successLottie: {
+    width: 120,
+    height: 120,
+    alignSelf: "center",
+    marginTop: 15,
   },
   buttonWrapper: {
     borderRadius: 10,
@@ -274,7 +383,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
   },
-  repoDescription: { color: "#555", marginBottom: 15 },
   repoStats: { fontSize: 16, fontWeight: "600", color: "black", marginTop: 5 },
   repoLink: { fontSize: 14, color: "#007AFF", marginTop: 10 },
   lottie: { width: 150, height: 150, alignSelf: "center", marginTop: 20 },
