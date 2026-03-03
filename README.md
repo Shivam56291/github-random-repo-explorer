@@ -1,63 +1,164 @@
-# GitHub Random Repo Explorer
+# 🚀 GitHub Random Repo Explorer & Coding Tracker
 
-A modern **React Native Expo app** that fetches and displays a random public GitHub repository for any GitHub username. The app features smooth **Lottie animations** for loading, success, and error states, providing a professional and interactive mobile experience.
+A modern **React Native (Expo)** mobile application that allows users to:
 
----
+- 🔎 Explore random public repositories from any GitHub user  
+- 📊 Track daily coding progress with streak analytics  
+- 🎨 Experience smooth, premium animations across tabs  
 
-## Features
-
-- Search for GitHub users by username
-- Fetch and display a random public repository
-- View repository details:
-  - Name
-  - Description
-  - Stars ⭐
-  - Forks 🍴
-  - Repository link 🔗
-- Smooth Lottie animations:
-  - Loading spinner while fetching
-  - Success animation when a repo is fetched
-  - Error animation for invalid usernames or network issues
-- Fully responsive UI with ScrollView support
-- Modern and clean card-based design
+Built with **Expo Router**, **AsyncStorage**, and polished UI animations for a clean, production-ready feel.
 
 ---
 
-## Screenshots
+## ✨ Features
 
-<p align="center">
-  <img src="./assets/Screenshot_20251210-181529.png" alt="App Screenshot 1" width="300"/>
-  <br>
-  <sub>Screenshot 1: Home screen</sub>
-</p>
+### 🔎 GitHub Explorer
 
-<p align="center">
-  <img src="./assets/Screenshot_20251210-181612.png.png" alt="App Screenshot 2" width="300"/>
-  <br>
-  <sub>Screenshot 2: GitHub screen</sub>
-</p>
-
-<p align="center">
-  <img src="./assets/Screenshot_20251210-182408.png" alt="App Screenshot 2" width="300"/>
-  <br>
-  <sub>Screenshot 3: Random Repo Result</sub>
-</p>
-
+- Search GitHub users by username  
+- Fetch a **random public repository**  
+- View detailed repository information:
+  - 📌 Repository Name  
+  - 📝 Description  
+  - ⭐ Stars  
+  - 🍴 Forks  
+  - 🔗 Direct GitHub link  
+- Smooth animated states:
+  - Loading animation  
+  - Success animation  
+  - Error animation  
+- Scrollable result layout for better mobile experience  
 
 ---
 
-## Installation
+### 📈 Coding Progress Tracker (New)
 
-1. Clone the repository:
+A fully functional manual coding tracker:
 
-```bash
-git clone https://github.com/<your-username>/github-random-repo-explorer.git
+- ➕ Add daily solved problem count  
+- 🔥 Automatic streak calculation  
+- 📊 7-day progress visualization  
+- 💾 Persistent local storage using AsyncStorage  
+- 🧠 Smart date-based tracking (one entry per day)  
+- 📦 Clean card-based stats layout  
+- ✨ Smooth focus-based screen animations  
+
+---
+
+## 🎬 Premium UI & UX Enhancements
+
+- Animated screen transitions per tab  
+- Focus-based animation triggers  
+- Micro-interactions on button press  
+- Smooth fade, slide, and scale effects  
+- Gradient headers  
+- Elevated card design with soft shadows  
+- Responsive ScrollView layouts  
+- Modern mobile-first design approach  
+
+---
+
+## 🧱 Tech Stack
+
+- React Native  
+- Expo  
+- Expo Router (Tab Navigation)  
+- AsyncStorage  
+- Lottie Animations  
+- React Native Animated API  
+
+---
+
+## 📱 App Structure
+
+app/
+ ├── index.tsx        → Home (Welcome + animations)
+ ├── github.tsx       → GitHub Random Repo Explorer
+ ├── tracker.tsx      → Coding Progress Tracker
+ ├── _layout.tsx      → Tab Layout & Navigation
+components/
+ └── CustomAlert.tsx
+
+---
+
+## 📸 Screenshots
+
+### Home Screen  
+![Home](./assets/Screenshot_1772561889.png)
+
+### GitHub Explorer  
+![GitHub](./assets/Screenshot_1772561884.png)
+
+### Random Repository Result  
+![Result](./assets/Screenshot_1772561894.png)
+
+---
+
+## ⚙️ Installation
+
+Clone the repository:
+
+git clone https://github.com/<your-username>/github-random-repo-explorer.git  
 cd github-random-repo-explorer
 
-## Usage
+Install dependencies:
 
-1. Enter a GitHub username in the input field.
-2. Tap **Get Random Repo**.
-3. View the randomly selected repository with its details.
-4. Tap the repository link to open it in your browser.
-```
+npm install
+
+Start the Expo development server:
+
+npx expo start
+
+---
+
+## 🚀 Usage
+
+### GitHub Explorer
+
+1. Enter a GitHub username.  
+2. Tap **Get Random Repo**.  
+3. View repository details.  
+4. Tap the link to open it in your browser.  
+
+### Coding Tracker
+
+1. Navigate to the **Tracker tab**.  
+2. Enter the number of problems solved today.  
+3. Tap **Save Progress**.  
+4. View:
+   - Total solved problems  
+   - Current streak  
+   - Weekly progress graph  
+
+---
+
+## 🎯 Why This Project?
+
+This project demonstrates:
+
+- API integration with GitHub  
+- State management in React Native  
+- Local persistence with AsyncStorage  
+- Streak calculation logic  
+- Tab-based navigation with animations  
+- Clean UI/UX principles  
+- Mobile performance optimization  
+
+Ideal as a **portfolio-ready React Native project**.
+
+---
+
+## 🛠 Future Improvements
+
+- GitHub OAuth login  
+- Real chart library integration  
+- Dark mode support  
+- Cloud sync for tracker data  
+- Achievement badge system  
+- Calendar-based contribution heatmap  
+- Profile analytics tab  
+
+---
+
+## 📄 License
+
+This project is open-source and available under the MIT License.
