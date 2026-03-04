@@ -1,16 +1,15 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import React, { useEffect, useRef, useState } from "react";
+import { LinearGradient } from "expo-linear-gradient";
+import { useEffect, useRef, useState } from "react";
 import {
-  View,
-  Text,
-  StyleSheet,
-  TextInput,
-  Pressable,
-  ScrollView,
   Animated,
   Easing,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
 } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
 
 type DayEntry = {
   date: string;
@@ -21,6 +20,7 @@ export default function Tracker() {
   const [solvedToday, setSolvedToday] = useState("");
   const [entries, setEntries] = useState<DayEntry[]>([]);
   const [streak, setStreak] = useState(0);
+  const [isSavedToday, setIsSavedToday] = useState(false);
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleButton = useRef(new Animated.Value(1)).current;
@@ -50,8 +50,12 @@ export default function Tracker() {
       setEntries(parsed);
 
       const todayEntry = parsed.find((e: DayEntry) => e.date === today);
+
       if (todayEntry) {
         setSolvedToday(String(todayEntry.solved));
+        setIsSavedToday(true);
+      } else {
+        setIsSavedToday(false);
       }
     }
   };
@@ -62,7 +66,7 @@ export default function Tracker() {
   };
 
   const addEntry = async () => {
-    if (!solvedToday) return;
+    if (!solvedToday || isSavedToday) return;
 
     Animated.sequence([
       Animated.timing(scaleButton, {
@@ -86,12 +90,13 @@ export default function Tracker() {
     const updated = [...filtered, newEntry];
 
     await saveData(updated);
+    setIsSavedToday(true);
   };
 
   /* ------------------ STREAK LOGIC ------------------ */
   const calculateStreak = (data: DayEntry[]) => {
     const sorted = [...data].sort(
-      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
     );
 
     let currentStreak = 0;
@@ -100,8 +105,7 @@ export default function Tracker() {
     for (let entry of sorted) {
       const entryDate = new Date(entry.date);
       const diff =
-        (currentDate.getTime() - entryDate.getTime()) /
-        (1000 * 60 * 60 * 24);
+        (currentDate.getTime() - entryDate.getTime()) / (1000 * 60 * 60 * 24);
 
       if (Math.floor(diff) === 0 || Math.floor(diff) === 1) {
         currentStreak++;
@@ -145,15 +149,25 @@ export default function Tracker() {
         />
 
         <Animated.View style={{ transform: [{ scale: scaleButton }] }}>
-          <Pressable onPress={addEntry}>
+          <Pressable onPress={addEntry} disabled={isSavedToday}>
             <LinearGradient
-              colors={["#007AFF", "#005BBB"]}
-              style={styles.button}
+              colors={
+                isSavedToday ? ["#B0B0B0", "#999999"] : ["#007AFF", "#005BBB"]
+              }
+              style={[styles.button, isSavedToday && { opacity: 0.8 }]}
             >
-              <Text style={styles.buttonText}>Save Progress</Text>
+              <Text style={styles.buttonText}>
+                {isSavedToday ? "Saved for Today ✓" : "Save Progress"}
+              </Text>
             </LinearGradient>
           </Pressable>
         </Animated.View>
+
+        {isSavedToday && (
+          <Text style={styles.savedMessage}>
+            Today's progress already recorded. Come back tomorrow !
+          </Text>
+        )}
       </View>
 
       {/* Graph Section */}
@@ -178,24 +192,9 @@ export default function Tracker() {
 
 /* ------------------ PREMIUM STAT CARD ------------------ */
 function PremiumStatCard({ label, value }: { label: string; value: number }) {
-  const animatedValue = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    Animated.timing(animatedValue, {
-      toValue: value,
-      duration: 800,
-      useNativeDriver: false,
-    }).start();
-  }, [value]);
-
   return (
     <View style={styles.statCard}>
-      <Animated.Text style={styles.statNumber}>
-        {animatedValue.interpolate({
-          inputRange: [0, value || 1],
-          outputRange: [0, value || 1],
-        })}
-      </Animated.Text>
+      <Text style={styles.statNumber}>{value}</Text>
       <Text style={styles.statLabel}>{label}</Text>
     </View>
   );
@@ -245,9 +244,6 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignItems: "center",
     elevation: 8,
-    shadowColor: "#000",
-    shadowOpacity: 0.08,
-    shadowRadius: 15,
   },
   statNumber: {
     fontSize: 26,
@@ -263,9 +259,6 @@ const styles = StyleSheet.create({
     padding: 22,
     borderRadius: 20,
     elevation: 8,
-    shadowColor: "#000",
-    shadowOpacity: 0.08,
-    shadowRadius: 15,
     marginBottom: 25,
   },
   label: {
@@ -289,14 +282,18 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     fontSize: 16,
   },
+  savedMessage: {
+    marginTop: 10,
+    fontSize: 13,
+    color: "#28A745",
+    textAlign: "center",
+    fontWeight: "500",
+  },
   graphCard: {
     backgroundColor: "#fff",
     padding: 22,
     borderRadius: 20,
     elevation: 8,
-    shadowColor: "#000",
-    shadowOpacity: 0.08,
-    shadowRadius: 15,
   },
   graphTitle: {
     fontWeight: "700",

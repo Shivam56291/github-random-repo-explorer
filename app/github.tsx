@@ -4,6 +4,7 @@ import LottieView from "lottie-react-native";
 import React, { useRef, useState } from "react";
 import {
   Animated,
+  Keyboard,
   Linking,
   Pressable,
   ScrollView,
@@ -26,38 +27,63 @@ export default function Settings() {
   const [loading, setLoading] = useState(false);
   const [repo, setRepo] = useState<Repo | null>(null);
   const [error, setError] = useState("");
+  const [errorTitle, setErrorTitle] = useState("");
+  const [inputError, setInputError] = useState(false);
 
   const fetchRepo = async () => {
+    
+    Keyboard.dismiss();
+    
     if (!username.trim()) {
       setRepo(null);
-      setError("Please enter a username");
+      setErrorTitle("Username Required");
+      setError("Please enter a GitHub username to continue.");
+      setInputError(true);
       return;
     }
 
     setLoading(true);
     setError("");
+    setErrorTitle("");
     setRepo(null);
+    setInputError(false);
 
     try {
       const response = await fetch(
-        `https://api.github.com/users/${username}/repos`,
+        `https://api.github.com/users/${username.trim()}/repos`,
       );
-      const data = await response.json();
 
-      if (!Array.isArray(data)) {
-        setError("User not found");
+      // ✅ User not found
+      if (response.status === 404) {
+        setErrorTitle("User Not Found");
+        setError(
+          "We couldn't find this GitHub user. Please check the username.",
+        );
         return;
       }
 
-      if (data.length === 0) {
-        setError("This user has no public repositories");
+      // ✅ Rate limit
+      if (response.status === 403) {
+        setErrorTitle("API Limit Reached");
+        setError("GitHub API rate limit exceeded. Please try again later.");
+        return;
+      }
+
+      const data = await response.json();
+
+      // ✅ No repositories
+      if (!Array.isArray(data) || data.length === 0) {
+        setErrorTitle("No Public Repositories");
+        setError("This user does not have any public repositories.");
         return;
       }
 
       const randomIndex = Math.floor(Math.random() * data.length);
       setRepo(data[randomIndex]);
     } catch {
-      setError("Error fetching data");
+      // ✅ Network error
+      setErrorTitle("Network Error");
+      setError("Unable to fetch data. Please check your internet connection.");
     } finally {
       setLoading(false);
     }
@@ -87,13 +113,7 @@ export default function Settings() {
   );
 
   return (
-    <Animated.View
-      style={{
-        flex: 1,
-        opacity,
-        transform: [{ translateX }],
-      }}
-    >
+    <Animated.View style={{ flex: 1, opacity, transform: [{ translateX }] }}>
       <ScrollView
         style={styles.container}
         contentContainerStyle={{ flexGrow: 1 }}
@@ -102,12 +122,22 @@ export default function Settings() {
 
         <View style={styles.card}>
           <Text style={styles.label}>GitHub Username</Text>
+
           <TextInput
-            style={styles.input}
+            style={[
+              styles.input,
+              inputError && { borderColor: "#FF3B30", borderWidth: 2 },
+            ]}
             placeholder="Enter username (e.g. torvalds)"
             value={username}
-            onChangeText={setUsername}
+            onSubmitEditing={fetchRepo}
+            returnKeyType="search"
+            onChangeText={(text) => {
+              setUsername(text);
+              if (inputError) setInputError(false);
+            }}
           />
+
           <Pressable
             onPress={fetchRepo}
             disabled={loading}
@@ -130,7 +160,7 @@ export default function Settings() {
           </Pressable>
         </View>
 
-        {/* Loading Animation */}
+        {/* Loading */}
         {loading && (
           <LottieView
             source={require("../assets/github-spinner.json")}
@@ -140,14 +170,14 @@ export default function Settings() {
           />
         )}
 
-        {/* Error Animation */}
+        {/* Error UI */}
         {error && !loading && (
           <View style={styles.errorCard}>
             <View style={styles.errorBadge}>
               <Text style={styles.errorIcon}>⚠</Text>
             </View>
 
-            <Text style={styles.errorTitle}>Something went wrong</Text>
+            <Text style={styles.errorTitle}>{errorTitle}</Text>
             <Text style={styles.errorMessage}>{error}</Text>
 
             <LottieView
@@ -162,23 +192,18 @@ export default function Settings() {
         {/* Repo Result */}
         {repo && !loading && (
           <View style={styles.repoCard}>
-            {/* Header Row */}
-            <View style={styles.repoHeader}>
-              <View style={styles.repoNameContainer}>
-                <Text numberOfLines={1} style={styles.repoName}>
-                  {repo.name}
-                </Text>
-                <Text style={styles.publicBadge}>Public</Text>
-              </View>
+            <View style={styles.repoNameContainer}>
+              <Text numberOfLines={1} style={styles.repoName}>
+                {repo.name}
+              </Text>
+              <Text style={styles.publicBadge}>Public</Text>
             </View>
 
-            {/* Description */}
             <Text style={styles.repoDescription}>
               {repo.description ||
                 "No description available for this repository."}
             </Text>
 
-            {/* Stats Row */}
             <View style={styles.statsRow}>
               <View style={styles.statBox}>
                 <Text style={styles.statNumber}>{repo.stargazers_count}</Text>
@@ -193,7 +218,6 @@ export default function Settings() {
               </View>
             </View>
 
-            {/* Visit Button */}
             <Pressable
               onPress={() => Linking.openURL(repo.html_url)}
               style={({ pressed }) => [
@@ -251,154 +275,37 @@ const styles = StyleSheet.create({
     padding: 10,
     color: "black",
   },
-  error: {
-    color: "red",
-    textAlign: "center",
-    marginTop: 10,
-    fontWeight: "600",
-    fontSize: 16,
-  },
-  repoCard: {
-    backgroundColor: "#fff",
-    marginTop: 30,
-    padding: 22,
-    borderRadius: 18,
-    shadowColor: "#000",
-    shadowOpacity: 0.08,
-    shadowRadius: 20,
-    elevation: 8,
-  },
-
-  repoHeader: {
-    marginBottom: 10,
-  },
-
-  repoNameContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-
-  repoName: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: "#111",
-    flex: 1,
-  },
-
-  publicBadge: {
-    backgroundColor: "#EAF3FF",
-    color: "#007AFF",
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 20,
-    fontSize: 12,
-    fontWeight: "600",
-    marginLeft: 10,
-  },
-
-  repoDescription: {
-    fontSize: 14,
-    color: "#666",
-    lineHeight: 20,
-    marginBottom: 20,
-  },
-
-  statsRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-around",
-    backgroundColor: "#F7F9FC",
-    paddingVertical: 16,
-    borderRadius: 14,
-    marginBottom: 20,
-  },
-
-  statBox: {
-    alignItems: "center",
-  },
-
-  statNumber: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#007AFF",
-  },
-
-  statLabel: {
-    fontSize: 13,
-    color: "#555",
-    marginTop: 4,
-  },
-
-  statDivider: {
-    width: 1,
-    height: 40,
-    backgroundColor: "#ddd",
-  },
-
-  visitButton: {
-    backgroundColor: "#007AFF",
-    paddingVertical: 14,
-    borderRadius: 14,
-    alignItems: "center",
-    shadowColor: "#007AFF",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
-    elevation: 6,
-  },
-
-  visitButtonText: {
-    color: "#fff",
-    fontWeight: "700",
-    fontSize: 15,
-  },
-
-  successLottie: {
-    width: 120,
-    height: 120,
-    alignSelf: "center",
-    marginTop: 15,
-  },
   buttonWrapper: {
     borderRadius: 10,
     overflow: "hidden",
     marginTop: 5,
   },
-
   button: {
     paddingVertical: 14,
     borderRadius: 10,
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#007AFF",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 5,
   },
-
   buttonText: {
     color: "white",
     fontSize: 16,
     fontWeight: "bold",
   },
-  repoStats: { fontSize: 16, fontWeight: "600", color: "black", marginTop: 5 },
-  repoLink: { fontSize: 14, color: "#007AFF", marginTop: 10 },
-  lottie: { width: 150, height: 150, alignSelf: "center", marginTop: 20 },
+  lottie: {
+    width: 150,
+    height: 150,
+    alignSelf: "center",
+    marginTop: 20,
+  },
+
   errorCard: {
     marginTop: 20,
-    paddingVertical: 15,
-    paddingHorizontal: 16,
+    padding: 18,
     borderRadius: 14,
     backgroundColor: "#FFF5F5",
     borderWidth: 1,
     borderColor: "#FFD6D6",
     alignItems: "center",
-    shadowColor: "#FF3B30",
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 3,
   },
   errorBadge: {
     width: 50,
@@ -409,29 +316,87 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 10,
   },
-
   errorIcon: {
     fontSize: 22,
     color: "#FF3B30",
     fontWeight: "bold",
   },
-
   errorTitle: {
     fontSize: 16,
     fontWeight: "700",
     color: "#B00020",
-    marginBottom: 3,
+    marginBottom: 5,
   },
-
   errorMessage: {
     fontSize: 14,
     color: "#7A1C1C",
     textAlign: "center",
     marginBottom: 10,
   },
-
   errorLottie: {
     width: 100,
     height: 100,
+  },
+
+  repoCard: {
+    backgroundColor: "#fff",
+    marginTop: 30,
+    padding: 22,
+    borderRadius: 18,
+    elevation: 8,
+  },
+  repoNameContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  repoName: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#111",
+    flex: 1,
+  },
+  publicBadge: {
+    backgroundColor: "#EAF3FF",
+    color: "#007AFF",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 20,
+    fontSize: 12,
+    fontWeight: "600",
+    marginLeft: 10,
+  },
+  repoDescription: {
+    fontSize: 14,
+    color: "#666",
+    marginBottom: 20,
+  },
+  statsRow: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    backgroundColor: "#F7F9FC",
+    paddingVertical: 16,
+    borderRadius: 14,
+    marginBottom: 20,
+  },
+  statBox: { alignItems: "center" },
+  statNumber: { fontSize: 18, fontWeight: "700", color: "#007AFF" },
+  statLabel: { fontSize: 13, color: "#555", marginTop: 4 },
+  statDivider: { width: 1, height: 40, backgroundColor: "#ddd" },
+  visitButton: {
+    backgroundColor: "#007AFF",
+    paddingVertical: 14,
+    borderRadius: 14,
+    alignItems: "center",
+  },
+  visitButtonText: {
+    color: "#fff",
+    fontWeight: "700",
+    fontSize: 15,
+  },
+  successLottie: {
+    width: 120,
+    height: 120,
+    alignSelf: "center",
+    marginTop: 15,
   },
 });
