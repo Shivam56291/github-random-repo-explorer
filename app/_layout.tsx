@@ -64,6 +64,20 @@ export default function TabLayout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          headerTitle: () => (
+            <View style={styles.headerTitleContainer}>
+              <Ionicons name="person-circle" size={20} color="#fff" />
+              <Text style={styles.headerText}> Profile</Text>
+            </View>
+          ),
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="person-circle" color={color} size={size} />
+          ),
+        }}
+      />
 
       <Tabs.Screen
         name="tracker"
