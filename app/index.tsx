@@ -1,122 +1,98 @@
 import { useFocusEffect } from "expo-router";
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
+import { useCallback, useState } from "react";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  withTiming,
+  withDelay,
+} from "react-native-reanimated";
 
 import CustomAlert from "../components/CustomAlert";
 
 export default function Index() {
   const [alertVisible, setAlertVisible] = useState(false);
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const translateY = useRef(new Animated.Value(80)).current;
-  const scaleLogo = useRef(new Animated.Value(0.8)).current;
 
-  useEffect(() => {
-    Animated.spring(scaleLogo, {
-      toValue: 1,
-      friction: 6,
-      useNativeDriver: true,
-    }).start();
-  }, []);
-
-  useEffect(() => {
-    fadeAnim.setValue(0);
-    translateY.setValue(60);
-
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 800,
-        useNativeDriver: true,
-      }),
-      Animated.spring(translateY, {
-        toValue: 0,
-        friction: 6,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, []);
+  // Reanimated Shared Values
+  const fadeAnim = useSharedValue(0);
+  const translateY = useSharedValue(60);
+  const scaleLogo = useSharedValue(0.8);
+  const opacity = useSharedValue(0);
+  const translateX = useSharedValue(50);
+  const buttonScale = useSharedValue(1);
 
   useFocusEffect(
     useCallback(() => {
-      fadeAnim.setValue(0);
-      translateY.setValue(60);
+      // Reset values for mount/focus
+      fadeAnim.value = 0;
+      translateY.value = 60;
+      opacity.value = 0;
+      translateX.value = 50;
+      scaleLogo.value = 0.8;
 
-      Animated.parallel([
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 800,
-          useNativeDriver: true,
-        }),
-        Animated.spring(translateY, {
-          toValue: 0,
-          friction: 6,
-          useNativeDriver: true,
-        }),
-      ]).start();
+      // Premium Entry Animations
+      scaleLogo.value = withSpring(1, { damping: 10, stiffness: 100, mass: 1 });
+      
+      opacity.value = withTiming(1, { duration: 500 });
+      translateX.value = withSpring(0, { damping: 14, stiffness: 90 });
+
+      // Staggered features entrance
+      fadeAnim.value = withDelay(150, withTiming(1, { duration: 600 }));
+      translateY.value = withDelay(150, withSpring(0, { damping: 14, stiffness: 90 }));
     }, []),
   );
 
-  const opacity = useRef(new Animated.Value(0)).current;
-  const translateX = useRef(new Animated.Value(50)).current;
+  // Animated Styles
+  const containerStyle = useAnimatedStyle(() => ({
+    flex: 1,
+    opacity: opacity.value,
+    transform: [{ translateX: translateX.value }],
+  }));
 
-  useFocusEffect(
-    React.useCallback(() => {
-      opacity.setValue(0);
-      translateX.setValue(50);
+  const logoStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scaleLogo.value }],
+  }));
 
-      Animated.parallel([
-        Animated.timing(opacity, {
-          toValue: 1,
-          duration: 400,
-          useNativeDriver: true,
-        }),
-        Animated.spring(translateX, {
-          toValue: 0,
-          friction: 8,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    }, []),
-  );
+  const featuresStyle = useAnimatedStyle(() => ({
+    opacity: fadeAnim.value,
+    transform: [{ translateY: translateY.value }],
+  }));
+
+  const buttonAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: buttonScale.value }],
+    width: "100%", // Ensures full width if layout demands
+    alignItems: "center"
+  }));
 
   return (
-    <Animated.View
-      style={{
-        flex: 1,
-        opacity,
-        transform: [{ translateX }],
-      }}
-    >
+    <Animated.View style={containerStyle}>
       <View style={styles.container}>
         <View style={styles.card}>
           <Animated.Image
             source={{
               uri: "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png",
             }}
-            style={[styles.image, { transform: [{ scale: scaleLogo }] }]}
+            style={[styles.image, logoStyle]}
           />
           <Text style={styles.title}>Welcome to GitHub Explorer</Text>
           <Text style={styles.subtitle}>
             Explore random repositories of any GitHub user instantly.
           </Text>
 
-          <Pressable
-            style={({ pressed }) => [
-              styles.button,
-              pressed && { opacity: 0.7 },
-            ]}
-            onPress={() => setAlertVisible(true)}
-          >
-            <Text style={styles.buttonText}>Get Started</Text>
-          </Pressable>
+          <Animated.View style={buttonAnimatedStyle}>
+            <Pressable
+              style={styles.button}
+              onPressIn={() => (buttonScale.value = withSpring(0.95, { damping: 12, stiffness: 200 }))}
+              onPressOut={() => (buttonScale.value = withSpring(1, { damping: 12, stiffness: 200 }))}
+              onPress={() => setAlertVisible(true)}
+            >
+              <Text style={styles.buttonText}>Get Started</Text>
+            </Pressable>
+          </Animated.View>
         </View>
 
-        <Animated.View
-          style={[
-            styles.features,
-            { opacity: fadeAnim, transform: [{ translateY }] },
-          ]}
-        >
+        <Animated.View style={[styles.features, featuresStyle]}>
           <Text style={styles.featuresTitle}>What You Can Do</Text>
 
           <View style={styles.featureRow}>

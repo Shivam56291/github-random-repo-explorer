@@ -1,15 +1,20 @@
-import React, { useRef, useState } from "react";
+import { useCallback, useState } from "react";
 import {
   View,
   Text,
   TextInput,
   StyleSheet,
   Pressable,
-  Image,
   ScrollView,
   ActivityIndicator,
-  Animated,
 } from "react-native";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  withTiming,
+  withDelay,
+} from "react-native-reanimated";
 import { useFocusEffect } from "expo-router";
 
 type User = {
@@ -30,56 +35,36 @@ export default function Profile() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  /* Animations */
-  const screenOpacity = useRef(new Animated.Value(0)).current;
-  const screenTranslate = useRef(new Animated.Value(40)).current;
+  /* Reanimated Shared Values */
+  const screenOpacity = useSharedValue(0);
+  const screenTranslate = useSharedValue(40);
 
-  const avatarScale = useRef(new Animated.Value(0.7)).current;
-  const cardOpacity = useRef(new Animated.Value(0)).current;
-  const statsOpacity = useRef(new Animated.Value(0)).current;
+  const avatarScale = useSharedValue(0.7);
+  const cardOpacity = useSharedValue(0);
+  const statsOpacity = useSharedValue(0);
+  const buttonScale = useSharedValue(1);
 
   useFocusEffect(
-    React.useCallback(() => {
-      screenOpacity.setValue(0);
-      screenTranslate.setValue(40);
+    useCallback(() => {
+      // Reset
+      screenOpacity.value = 0;
+      screenTranslate.value = 40;
 
-      Animated.parallel([
-        Animated.timing(screenOpacity, {
-          toValue: 1,
-          duration: 450,
-          useNativeDriver: true,
-        }),
-        Animated.spring(screenTranslate, {
-          toValue: 0,
-          friction: 8,
-          useNativeDriver: true,
-        }),
-      ]).start();
+      // Premium Entrance
+      screenOpacity.value = withTiming(1, { duration: 400 });
+      screenTranslate.value = withSpring(0, { damping: 14, stiffness: 100 });
     }, [])
   );
 
   const startProfileAnimations = () => {
-    avatarScale.setValue(0.7);
-    cardOpacity.setValue(0);
-    statsOpacity.setValue(0);
+    avatarScale.value = 0.7;
+    cardOpacity.value = 0;
+    statsOpacity.value = 0;
 
-    Animated.sequence([
-      Animated.spring(avatarScale, {
-        toValue: 1,
-        friction: 5,
-        useNativeDriver: true,
-      }),
-      Animated.timing(cardOpacity, {
-        toValue: 1,
-        duration: 400,
-        useNativeDriver: true,
-      }),
-      Animated.timing(statsOpacity, {
-        toValue: 1,
-        duration: 500,
-        useNativeDriver: true,
-      }),
-    ]).start();
+    // Trigger animations
+    avatarScale.value = withSpring(1, { damping: 10, stiffness: 120 });
+    cardOpacity.value = withTiming(1, { duration: 400 });
+    statsOpacity.value = withDelay(150, withTiming(1, { duration: 500 }));
   };
 
   const fetchProfile = async () => {
@@ -134,14 +119,31 @@ export default function Profile() {
     }
   };
 
+  // Animated Styles
+  const containerStyle = useAnimatedStyle(() => ({
+    flex: 1,
+    opacity: screenOpacity.value,
+    transform: [{ translateY: screenTranslate.value }],
+  }));
+
+  const buttonStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: buttonScale.value }],
+  }));
+
+  const avatarStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: avatarScale.value }],
+  }));
+
+  const profileCardStyle = useAnimatedStyle(() => ({
+    opacity: cardOpacity.value,
+  }));
+
+  const statsRowStyle = useAnimatedStyle(() => ({
+    opacity: statsOpacity.value,
+  }));
+
   return (
-    <Animated.View
-      style={{
-        flex: 1,
-        opacity: screenOpacity,
-        transform: [{ translateY: screenTranslate }],
-      }}
-    >
+    <Animated.View style={containerStyle}>
       <ScrollView style={styles.container}>
         <Text style={styles.title}>GitHub Profile Analyzer</Text>
 
@@ -158,15 +160,16 @@ export default function Profile() {
             returnKeyType="search"
           />
 
-          <Pressable
-            style={({ pressed }) => [
-              styles.button,
-              pressed && { transform: [{ scale: 0.96 }] },
-            ]}
-            onPress={fetchProfile}
-          >
-            <Text style={styles.buttonText}>Analyze Profile</Text>
-          </Pressable>
+          <Animated.View style={buttonStyle}>
+            <Pressable
+              style={styles.button}
+              onPressIn={() => (buttonScale.value = withSpring(0.96, { damping: 10, stiffness: 200 }))}
+              onPressOut={() => (buttonScale.value = withSpring(1, { damping: 10, stiffness: 200 }))}
+              onPress={fetchProfile}
+            >
+              <Text style={styles.buttonText}>Analyze Profile</Text>
+            </Pressable>
+          </Animated.View>
         </View>
 
         {/* Loading */}
@@ -179,22 +182,17 @@ export default function Profile() {
 
         {/* Profile Result */}
         {user && !loading && (
-          <Animated.View style={[styles.profileCard, { opacity: cardOpacity }]}>
+          <Animated.View style={[styles.profileCard, profileCardStyle]}>
             <Animated.Image
               source={{ uri: user.avatar_url }}
-              style={[
-                styles.avatar,
-                { transform: [{ scale: avatarScale }] },
-              ]}
+              style={[styles.avatar, avatarStyle]}
             />
 
             <Text style={styles.username}>{user.login}</Text>
 
             {user.bio && <Text style={styles.bio}>{user.bio}</Text>}
 
-            <Animated.View
-              style={[styles.statsRow, { opacity: statsOpacity }]}
-            >
+            <Animated.View style={[styles.statsRow, statsRowStyle]}>
               <View style={styles.statBox}>
                 <Text style={styles.statNumber}>{user.public_repos}</Text>
                 <Text style={styles.statLabel}>Repos</Text>
@@ -206,9 +204,7 @@ export default function Profile() {
               </View>
             </Animated.View>
 
-            <Animated.View
-              style={[styles.statsRow, { opacity: statsOpacity }]}
-            >
+            <Animated.View style={[styles.statsRow, statsRowStyle]}>
               <View style={styles.statBox}>
                 <Text style={styles.statNumber}>{user.followers}</Text>
                 <Text style={styles.statLabel}>Followers</Text>

@@ -1,9 +1,8 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { useFocusEffect } from "expo-router";
 import LottieView from "lottie-react-native";
-import React, { useRef, useState } from "react";
+import { useCallback, useState } from "react";
 import {
-  Animated,
   Keyboard,
   Linking,
   Pressable,
@@ -13,6 +12,13 @@ import {
   TextInput,
   View,
 } from "react-native";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withDelay,
+  withSpring,
+  withTiming,
+} from "react-native-reanimated";
 
 type Repo = {
   name: string;
@@ -22,7 +28,7 @@ type Repo = {
   html_url: string;
 };
 
-export default function Settings() {
+export default function GithubExplorer() {
   const [username, setUsername] = useState("");
   const [loading, setLoading] = useState(false);
   const [repo, setRepo] = useState<Repo | null>(null);
@@ -30,10 +36,16 @@ export default function Settings() {
   const [errorTitle, setErrorTitle] = useState("");
   const [inputError, setInputError] = useState(false);
 
+  // Reanimated Shared Values
+  const opacity = useSharedValue(0);
+  const translateX = useSharedValue(50);
+  const buttonScale = useSharedValue(1);
+  const resultCardOpacity = useSharedValue(0);
+  const resultCardTranslateY = useSharedValue(30);
+
   const fetchRepo = async () => {
-    
     Keyboard.dismiss();
-    
+
     if (!username.trim()) {
       setRepo(null);
       setErrorTitle("Username Required");
@@ -53,7 +65,6 @@ export default function Settings() {
         `https://api.github.com/users/${username.trim()}/repos`,
       );
 
-      // ✅ User not found
       if (response.status === 404) {
         setErrorTitle("User Not Found");
         setError(
@@ -62,7 +73,6 @@ export default function Settings() {
         return;
       }
 
-      // ✅ Rate limit
       if (response.status === 403) {
         setErrorTitle("API Limit Reached");
         setError("GitHub API rate limit exceeded. Please try again later.");
@@ -71,7 +81,6 @@ export default function Settings() {
 
       const data = await response.json();
 
-      // ✅ No repositories
       if (!Array.isArray(data) || data.length === 0) {
         setErrorTitle("No Public Repositories");
         setError("This user does not have any public repositories.");
@@ -80,8 +89,19 @@ export default function Settings() {
 
       const randomIndex = Math.floor(Math.random() * data.length);
       setRepo(data[randomIndex]);
+
+      // Animate result card entry
+      resultCardOpacity.value = 0;
+      resultCardTranslateY.value = 30;
+      resultCardOpacity.value = withDelay(
+        100,
+        withTiming(1, { duration: 400 }),
+      );
+      resultCardTranslateY.value = withDelay(
+        100,
+        withSpring(0, { damping: 14, stiffness: 100 }),
+      );
     } catch {
-      // ✅ Network error
       setErrorTitle("Network Error");
       setError("Unable to fetch data. Please check your internet connection.");
     } finally {
@@ -89,31 +109,37 @@ export default function Settings() {
     }
   };
 
-  const opacity = useRef(new Animated.Value(0)).current;
-  const translateX = useRef(new Animated.Value(50)).current;
-
   useFocusEffect(
-    React.useCallback(() => {
-      opacity.setValue(0);
-      translateX.setValue(50);
+    useCallback(() => {
+      opacity.value = 0;
+      translateX.value = 50;
 
-      Animated.parallel([
-        Animated.timing(opacity, {
-          toValue: 1,
-          duration: 400,
-          useNativeDriver: true,
-        }),
-        Animated.spring(translateX, {
-          toValue: 0,
-          friction: 8,
-          useNativeDriver: true,
-        }),
-      ]).start();
+      opacity.value = withTiming(1, { duration: 400 });
+      translateX.value = withSpring(0, { damping: 14, stiffness: 100 });
     }, []),
   );
 
+  // Animated Styles
+  const containerStyle = useAnimatedStyle(() => ({
+    flex: 1,
+    opacity: opacity.value,
+    transform: [{ translateX: translateX.value }],
+  }));
+
+  const buttonStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: buttonScale.value }],
+    marginTop: 5,
+    borderRadius: 10,
+    overflow: "hidden",
+  }));
+
+  const resultCardStyle = useAnimatedStyle(() => ({
+    opacity: resultCardOpacity.value,
+    transform: [{ translateY: resultCardTranslateY.value }],
+  }));
+
   return (
-    <Animated.View style={{ flex: 1, opacity, transform: [{ translateX }] }}>
+    <Animated.View style={containerStyle}>
       <ScrollView
         style={styles.container}
         contentContainerStyle={{ flexGrow: 1 }}
@@ -138,26 +164,36 @@ export default function Settings() {
             }}
           />
 
-          <Pressable
-            onPress={fetchRepo}
-            disabled={loading}
-            style={({ pressed }) => [
-              styles.buttonWrapper,
-              pressed && { opacity: 0.85 },
-              loading && { opacity: 0.6 },
-            ]}
-          >
-            <LinearGradient
-              colors={["#0A84FF", "#0066CC"]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.button}
+          <Animated.View style={buttonStyle}>
+            <Pressable
+              onPressIn={() =>
+                (buttonScale.value = withSpring(0.96, {
+                  damping: 10,
+                  stiffness: 200,
+                }))
+              }
+              onPressOut={() =>
+                (buttonScale.value = withSpring(1, {
+                  damping: 10,
+                  stiffness: 200,
+                }))
+              }
+              onPress={fetchRepo}
+              disabled={loading}
+              style={loading && { opacity: 0.6 }}
             >
-              <Text style={styles.buttonText}>
-                {loading ? "Loading..." : "Get Random Repo"}
-              </Text>
-            </LinearGradient>
-          </Pressable>
+              <LinearGradient
+                colors={["#0A84FF", "#0066CC"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.button}
+              >
+                <Text style={styles.buttonText}>
+                  {loading ? "Loading..." : "Get Random Repo"}
+                </Text>
+              </LinearGradient>
+            </Pressable>
+          </Animated.View>
         </View>
 
         {/* Loading */}
@@ -171,7 +207,7 @@ export default function Settings() {
         )}
 
         {/* Error UI */}
-        {error && !loading && (
+        {error !== "" && !loading && (
           <View style={styles.errorCard}>
             <View style={styles.errorBadge}>
               <Text style={styles.errorIcon}>⚠</Text>
@@ -191,7 +227,7 @@ export default function Settings() {
 
         {/* Repo Result */}
         {repo && !loading && (
-          <View style={styles.repoCard}>
+          <Animated.View style={[styles.repoCard, resultCardStyle]}>
             <View style={styles.repoNameContainer}>
               <Text numberOfLines={1} style={styles.repoName}>
                 {repo.name}
@@ -234,7 +270,7 @@ export default function Settings() {
               loop={false}
               style={styles.successLottie}
             />
-          </View>
+          </Animated.View>
         )}
       </ScrollView>
     </Animated.View>

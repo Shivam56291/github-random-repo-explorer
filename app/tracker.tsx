@@ -1,15 +1,21 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { useFocusEffect } from "expo-router";
 import {
-  Animated,
-  Easing,
   Pressable,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from "react-native";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  withTiming,
+  withDelay,
+} from "react-native-reanimated";
 
 type DayEntry = {
   date: string;
@@ -22,22 +28,27 @@ export default function Tracker() {
   const [streak, setStreak] = useState(0);
   const [isSavedToday, setIsSavedToday] = useState(false);
 
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const scaleButton = useRef(new Animated.Value(1)).current;
-
   const today = new Date().toISOString().split("T")[0];
+
+  /* Shared Values */
+  const screenOpacity = useSharedValue(0);
+  const screenTranslate = useSharedValue(40);
+  const buttonScale = useSharedValue(1);
 
   /* ------------------ LOAD DATA ------------------ */
   useEffect(() => {
     loadData();
-
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 500,
-      useNativeDriver: true,
-      easing: Easing.out(Easing.ease),
-    }).start();
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      screenOpacity.value = 0;
+      screenTranslate.value = 40;
+
+      screenOpacity.value = withTiming(1, { duration: 450 });
+      screenTranslate.value = withSpring(0, { damping: 14, stiffness: 100 });
+    }, [])
+  );
 
   useEffect(() => {
     calculateStreak(entries);
@@ -68,18 +79,9 @@ export default function Tracker() {
   const addEntry = async () => {
     if (!solvedToday || isSavedToday) return;
 
-    Animated.sequence([
-      Animated.timing(scaleButton, {
-        toValue: 0.95,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-      Animated.spring(scaleButton, {
-        toValue: 1,
-        friction: 4,
-        useNativeDriver: true,
-      }),
-    ]).start();
+    buttonScale.value = withSpring(0.9, { damping: 10, stiffness: 200 }, () => {
+      buttonScale.value = withSpring(1, { damping: 10, stiffness: 200 });
+    });
 
     const newEntry = {
       date: today,
@@ -124,9 +126,20 @@ export default function Tracker() {
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
     .slice(-7);
 
+  // Animated Styles
+  const containerStyle = useAnimatedStyle(() => ({
+    flex: 1,
+    opacity: screenOpacity.value,
+    transform: [{ translateY: screenTranslate.value }],
+  }));
+
+  const buttonStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: buttonScale.value }],
+  }));
+
   return (
     <Animated.ScrollView
-      style={[styles.container, { opacity: fadeAnim }]}
+      style={[styles.container, containerStyle]}
       contentContainerStyle={{ paddingBottom: 40 }}
     >
       <Text style={styles.title}>Coding Progress Tracker</Text>
@@ -148,8 +161,13 @@ export default function Tracker() {
           style={styles.input}
         />
 
-        <Animated.View style={{ transform: [{ scale: scaleButton }] }}>
-          <Pressable onPress={addEntry} disabled={isSavedToday}>
+        <Animated.View style={buttonStyle}>
+          <Pressable 
+            onPressIn={() => !isSavedToday && (buttonScale.value = withSpring(0.96, { damping: 10, stiffness: 200 }))}
+            onPressOut={() => !isSavedToday && (buttonScale.value = withSpring(1, { damping: 10, stiffness: 200 }))}
+            onPress={addEntry} 
+            disabled={isSavedToday}
+          >
             <LinearGradient
               colors={
                 isSavedToday ? ["#B0B0B0", "#999999"] : ["#007AFF", "#005BBB"]
@@ -181,7 +199,7 @@ export default function Tracker() {
         ) : (
           <View style={styles.graphRow}>
             {last7.map((entry, index) => (
-              <AnimatedBar key={index} value={entry.solved} />
+              <AnimatedBar key={index} value={entry.solved} index={index} />
             ))}
           </View>
         )}
@@ -201,20 +219,23 @@ function PremiumStatCard({ label, value }: { label: string; value: number }) {
 }
 
 /* ------------------ ANIMATED BAR ------------------ */
-function AnimatedBar({ value }: { value: number }) {
-  const heightAnim = useRef(new Animated.Value(0)).current;
+function AnimatedBar({ value, index }: { value: number; index?: number }) {
+  const heightAnim = useSharedValue(0);
 
   useEffect(() => {
-    Animated.spring(heightAnim, {
-      toValue: Math.min(value * 12, 120),
-      friction: 6,
-      useNativeDriver: false,
-    }).start();
-  }, []);
+    heightAnim.value = withDelay(
+      (index || 0) * 50,
+      withSpring(Math.min(value * 12, 120), { damping: 12, stiffness: 100 })
+    );
+  }, [value, index]);
+
+  const barStyle = useAnimatedStyle(() => ({
+    height: heightAnim.value,
+  }));
 
   return (
     <View style={styles.graphBarContainer}>
-      <Animated.View style={[styles.graphBar, { height: heightAnim }]} />
+      <Animated.View style={[styles.graphBar, barStyle]} />
       <Text style={styles.graphLabel}>{value}</Text>
     </View>
   );

@@ -7,7 +7,7 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        animation: "fade",
+        animation: "shift",
         headerBackground: () => (
           <LinearGradient
             colors={["#007AFF", "#005BBB"]}
