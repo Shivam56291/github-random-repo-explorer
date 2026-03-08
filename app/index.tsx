@@ -4,9 +4,9 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
-  withSpring,
   withTiming,
   withDelay,
+  Easing,
 } from "react-native-reanimated";
 
 import CustomAlert from "../components/CustomAlert";
@@ -16,30 +16,30 @@ export default function Index() {
 
   // Reanimated Shared Values
   const fadeAnim = useSharedValue(0);
-  const translateY = useSharedValue(60);
-  const scaleLogo = useSharedValue(0.8);
+  const translateY = useSharedValue(30);
+  const scaleLogo = useSharedValue(0.9);
   const opacity = useSharedValue(0);
-  const translateX = useSharedValue(50);
+  const translateX = useSharedValue(30);
   const buttonScale = useSharedValue(1);
 
   useFocusEffect(
     useCallback(() => {
       // Reset values for mount/focus
       fadeAnim.value = 0;
-      translateY.value = 60;
+      translateY.value = 30;
       opacity.value = 0;
-      translateX.value = 50;
-      scaleLogo.value = 0.8;
+      translateX.value = 30;
+      scaleLogo.value = 0.9;
 
       // Premium Entry Animations
-      scaleLogo.value = withSpring(1, { damping: 10, stiffness: 100, mass: 1 });
+      scaleLogo.value = withTiming(1, { duration: 600, easing: Easing.out(Easing.cubic) });
       
-      opacity.value = withTiming(1, { duration: 500 });
-      translateX.value = withSpring(0, { damping: 14, stiffness: 90 });
+      opacity.value = withTiming(1, { duration: 500, easing: Easing.out(Easing.cubic) });
+      translateX.value = withTiming(0, { duration: 500, easing: Easing.out(Easing.cubic) });
 
       // Staggered features entrance
-      fadeAnim.value = withDelay(150, withTiming(1, { duration: 600 }));
-      translateY.value = withDelay(150, withSpring(0, { damping: 14, stiffness: 90 }));
+      fadeAnim.value = withDelay(100, withTiming(1, { duration: 500, easing: Easing.out(Easing.cubic) }));
+      translateY.value = withDelay(100, withTiming(0, { duration: 500, easing: Easing.out(Easing.cubic) }));
     }, []),
   );
 
@@ -83,8 +83,8 @@ export default function Index() {
           <Animated.View style={buttonAnimatedStyle}>
             <Pressable
               style={styles.button}
-              onPressIn={() => (buttonScale.value = withSpring(0.95, { damping: 12, stiffness: 200 }))}
-              onPressOut={() => (buttonScale.value = withSpring(1, { damping: 12, stiffness: 200 }))}
+              onPressIn={() => (buttonScale.value = withTiming(0.95, { duration: 100, easing: Easing.out(Easing.quad) }))}
+              onPressOut={() => (buttonScale.value = withTiming(1, { duration: 150, easing: Easing.out(Easing.quad) }))}
               onPress={() => setAlertVisible(true)}
             >
               <Text style={styles.buttonText}>Get Started</Text>

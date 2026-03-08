@@ -11,9 +11,9 @@ import {
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
-  withSpring,
   withTiming,
   withDelay,
+  Easing,
 } from "react-native-reanimated";
 import { useFocusEffect } from "expo-router";
 
@@ -37,9 +37,9 @@ export default function Profile() {
 
   /* Reanimated Shared Values */
   const screenOpacity = useSharedValue(0);
-  const screenTranslate = useSharedValue(40);
+  const screenTranslate = useSharedValue(20);
 
-  const avatarScale = useSharedValue(0.7);
+  const avatarScale = useSharedValue(0.9);
   const cardOpacity = useSharedValue(0);
   const statsOpacity = useSharedValue(0);
   const buttonScale = useSharedValue(1);
@@ -48,23 +48,23 @@ export default function Profile() {
     useCallback(() => {
       // Reset
       screenOpacity.value = 0;
-      screenTranslate.value = 40;
+      screenTranslate.value = 20;
 
       // Premium Entrance
-      screenOpacity.value = withTiming(1, { duration: 400 });
-      screenTranslate.value = withSpring(0, { damping: 14, stiffness: 100 });
+      screenOpacity.value = withTiming(1, { duration: 400, easing: Easing.out(Easing.cubic) });
+      screenTranslate.value = withTiming(0, { duration: 400, easing: Easing.out(Easing.cubic) });
     }, [])
   );
 
   const startProfileAnimations = () => {
-    avatarScale.value = 0.7;
+    avatarScale.value = 0.9;
     cardOpacity.value = 0;
     statsOpacity.value = 0;
 
     // Trigger animations
-    avatarScale.value = withSpring(1, { damping: 10, stiffness: 120 });
-    cardOpacity.value = withTiming(1, { duration: 400 });
-    statsOpacity.value = withDelay(150, withTiming(1, { duration: 500 }));
+    avatarScale.value = withTiming(1, { duration: 500, easing: Easing.out(Easing.back(1.5)) });
+    cardOpacity.value = withTiming(1, { duration: 400, easing: Easing.out(Easing.cubic) });
+    statsOpacity.value = withDelay(100, withTiming(1, { duration: 400, easing: Easing.out(Easing.cubic) }));
   };
 
   const fetchProfile = async () => {
@@ -163,8 +163,8 @@ export default function Profile() {
           <Animated.View style={buttonStyle}>
             <Pressable
               style={styles.button}
-              onPressIn={() => (buttonScale.value = withSpring(0.96, { damping: 10, stiffness: 200 }))}
-              onPressOut={() => (buttonScale.value = withSpring(1, { damping: 10, stiffness: 200 }))}
+              onPressIn={() => (buttonScale.value = withTiming(0.95, { duration: 100, easing: Easing.out(Easing.quad) }))}
+              onPressOut={() => (buttonScale.value = withTiming(1, { duration: 150, easing: Easing.out(Easing.quad) }))}
               onPress={fetchProfile}
             >
               <Text style={styles.buttonText}>Analyze Profile</Text>

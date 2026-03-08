@@ -12,9 +12,9 @@ import {
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
-  withSpring,
   withTiming,
   withDelay,
+  Easing,
 } from "react-native-reanimated";
 
 type DayEntry = {
@@ -32,7 +32,7 @@ export default function Tracker() {
 
   /* Shared Values */
   const screenOpacity = useSharedValue(0);
-  const screenTranslate = useSharedValue(40);
+  const screenTranslate = useSharedValue(20);
   const buttonScale = useSharedValue(1);
 
   /* ------------------ LOAD DATA ------------------ */
@@ -43,10 +43,10 @@ export default function Tracker() {
   useFocusEffect(
     useCallback(() => {
       screenOpacity.value = 0;
-      screenTranslate.value = 40;
+      screenTranslate.value = 20;
 
-      screenOpacity.value = withTiming(1, { duration: 450 });
-      screenTranslate.value = withSpring(0, { damping: 14, stiffness: 100 });
+      screenOpacity.value = withTiming(1, { duration: 450, easing: Easing.out(Easing.cubic) });
+      screenTranslate.value = withTiming(0, { duration: 450, easing: Easing.out(Easing.cubic) });
     }, [])
   );
 
@@ -79,8 +79,8 @@ export default function Tracker() {
   const addEntry = async () => {
     if (!solvedToday || isSavedToday) return;
 
-    buttonScale.value = withSpring(0.9, { damping: 10, stiffness: 200 }, () => {
-      buttonScale.value = withSpring(1, { damping: 10, stiffness: 200 });
+    buttonScale.value = withTiming(0.95, { duration: 100, easing: Easing.out(Easing.quad) }, () => {
+      buttonScale.value = withTiming(1, { duration: 150, easing: Easing.out(Easing.quad) });
     });
 
     const newEntry = {
@@ -163,8 +163,8 @@ export default function Tracker() {
 
         <Animated.View style={buttonStyle}>
           <Pressable 
-            onPressIn={() => !isSavedToday && (buttonScale.value = withSpring(0.96, { damping: 10, stiffness: 200 }))}
-            onPressOut={() => !isSavedToday && (buttonScale.value = withSpring(1, { damping: 10, stiffness: 200 }))}
+            onPressIn={() => !isSavedToday && (buttonScale.value = withTiming(0.95, { duration: 100, easing: Easing.out(Easing.quad) }))}
+            onPressOut={() => !isSavedToday && (buttonScale.value = withTiming(1, { duration: 150, easing: Easing.out(Easing.quad) }))}
             onPress={addEntry} 
             disabled={isSavedToday}
           >
@@ -225,7 +225,7 @@ function AnimatedBar({ value, index }: { value: number; index?: number }) {
   useEffect(() => {
     heightAnim.value = withDelay(
       (index || 0) * 50,
-      withSpring(Math.min(value * 12, 120), { damping: 12, stiffness: 100 })
+      withTiming(Math.min(value * 12, 120), { duration: 500, easing: Easing.out(Easing.cubic) })
     );
   }, [value, index]);
 

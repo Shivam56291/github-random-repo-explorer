@@ -18,35 +18,33 @@ export default function CustomAlert({ visible, onClose }: CustomAlertProps) {
   const [showModal, setShowModal] = useState(visible);
 
   const backdropOpacity = useRef(new Animated.Value(0)).current;
-  const scale = useRef(new Animated.Value(0.8)).current;
-  const translateY = useRef(new Animated.Value(60)).current;
+  const scale = useRef(new Animated.Value(0.9)).current;
+  const translateY = useRef(new Animated.Value(20)).current;
 
   useEffect(() => {
     if (visible) {
       setShowModal(true);
 
-      scale.setValue(0.8);
-      translateY.setValue(60);
+      scale.setValue(0.9);
+      translateY.setValue(20);
 
       Animated.parallel([
         Animated.timing(backdropOpacity, {
           toValue: 1,
           duration: 250,
-          easing: Easing.out(Easing.ease),
+          easing: Easing.out(Easing.cubic),
           useNativeDriver: true,
         }),
-        Animated.spring(scale, {
+        Animated.timing(scale, {
           toValue: 1,
-          damping: 10,
-          stiffness: 120,
-          mass: 0.8,
+          duration: 300,
+          easing: Easing.out(Easing.back(1.2)),
           useNativeDriver: true,
         }),
-        Animated.spring(translateY, {
+        Animated.timing(translateY, {
           toValue: 0,
-          damping: 10,
-          stiffness: 120,
-          mass: 0.8,
+          duration: 300,
+          easing: Easing.out(Easing.cubic),
           useNativeDriver: true,
         }),
       ]).start();
@@ -58,15 +56,15 @@ export default function CustomAlert({ visible, onClose }: CustomAlertProps) {
           useNativeDriver: true,
         }),
         Animated.timing(scale, {
-          toValue: 0.85,
+          toValue: 0.9,
           duration: 200,
-          easing: Easing.in(Easing.ease),
+          easing: Easing.out(Easing.cubic),
           useNativeDriver: true,
         }),
         Animated.timing(translateY, {
-          toValue: 40,
+          toValue: 20,
           duration: 200,
-          easing: Easing.in(Easing.ease),
+          easing: Easing.out(Easing.cubic),
           useNativeDriver: true,
         }),
       ]).start(() => {

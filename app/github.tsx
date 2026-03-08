@@ -18,6 +18,7 @@ import Animated, {
   withDelay,
   withSpring,
   withTiming,
+  Easing,
 } from "react-native-reanimated";
 
 type Repo = {
@@ -38,10 +39,10 @@ export default function GithubExplorer() {
 
   // Reanimated Shared Values
   const opacity = useSharedValue(0);
-  const translateX = useSharedValue(50);
+  const translateX = useSharedValue(30);
   const buttonScale = useSharedValue(1);
   const resultCardOpacity = useSharedValue(0);
-  const resultCardTranslateY = useSharedValue(30);
+  const resultCardTranslateY = useSharedValue(20);
 
   const fetchRepo = async () => {
     Keyboard.dismiss();
@@ -92,14 +93,14 @@ export default function GithubExplorer() {
 
       // Animate result card entry
       resultCardOpacity.value = 0;
-      resultCardTranslateY.value = 30;
+      resultCardTranslateY.value = 20;
       resultCardOpacity.value = withDelay(
-        100,
-        withTiming(1, { duration: 400 }),
+        50,
+        withTiming(1, { duration: 400, easing: Easing.out(Easing.cubic) }),
       );
       resultCardTranslateY.value = withDelay(
-        100,
-        withSpring(0, { damping: 14, stiffness: 100 }),
+        50,
+        withTiming(0, { duration: 400, easing: Easing.out(Easing.cubic) }),
       );
     } catch {
       setErrorTitle("Network Error");
@@ -112,10 +113,10 @@ export default function GithubExplorer() {
   useFocusEffect(
     useCallback(() => {
       opacity.value = 0;
-      translateX.value = 50;
+      translateX.value = 30;
 
-      opacity.value = withTiming(1, { duration: 400 });
-      translateX.value = withSpring(0, { damping: 14, stiffness: 100 });
+      opacity.value = withTiming(1, { duration: 450, easing: Easing.out(Easing.cubic) });
+      translateX.value = withTiming(0, { duration: 450, easing: Easing.out(Easing.cubic) });
     }, []),
   );
 
@@ -167,15 +168,15 @@ export default function GithubExplorer() {
           <Animated.View style={buttonStyle}>
             <Pressable
               onPressIn={() =>
-                (buttonScale.value = withSpring(0.96, {
-                  damping: 10,
-                  stiffness: 200,
+                (buttonScale.value = withTiming(0.96, {
+                  duration: 100,
+                  easing: Easing.out(Easing.quad),
                 }))
               }
               onPressOut={() =>
-                (buttonScale.value = withSpring(1, {
-                  damping: 10,
-                  stiffness: 200,
+                (buttonScale.value = withTiming(1, {
+                  duration: 150,
+                  easing: Easing.out(Easing.quad),
                 }))
               }
               onPress={fetchRepo}
