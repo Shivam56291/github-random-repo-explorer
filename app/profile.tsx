@@ -1,21 +1,20 @@
+import { useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
 import {
-  View,
-  Text,
-  TextInput,
-  StyleSheet,
   Pressable,
   ScrollView,
-  ActivityIndicator,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
 } from "react-native";
 import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withTiming,
-  withDelay,
   Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withDelay,
+  withTiming,
 } from "react-native-reanimated";
-import { useFocusEffect } from "expo-router";
 
 type User = {
   avatar_url: string;
@@ -27,6 +26,38 @@ type User = {
   created_at: string;
 };
 
+function ProfileSkeleton() {
+  const opacity = useSharedValue(0.4);
+
+  opacity.value = withTiming(1, {
+    duration: 800,
+    easing: Easing.inOut(Easing.ease),
+  });
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+  }));
+
+  return (
+    <Animated.View style={[styles.profileCard, animatedStyle]}>
+      <View style={styles.skeletonAvatar} />
+
+      <View style={styles.skeletonLineLarge} />
+      <View style={styles.skeletonLineSmall} />
+
+      <View style={styles.skeletonStats}>
+        <View style={styles.skeletonStatBox} />
+        <View style={styles.skeletonStatBox} />
+      </View>
+
+      <View style={styles.skeletonStats}>
+        <View style={styles.skeletonStatBox} />
+        <View style={styles.skeletonStatBox} />
+      </View>
+    </Animated.View>
+  );
+}
+
 export default function Profile() {
   const [username, setUsername] = useState("");
   const [user, setUser] = useState<User | null>(null);
@@ -35,36 +66,67 @@ export default function Profile() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  /* Reanimated Shared Values */
+  /* Screen Animation */
   const screenOpacity = useSharedValue(0);
-  const screenTranslate = useSharedValue(20);
+  const screenTranslate = useSharedValue(40);
 
-  const avatarScale = useSharedValue(0.9);
+  /* Profile Animations */
+  const avatarScale = useSharedValue(0.7);
+  const avatarOpacity = useSharedValue(0);
+
   const cardOpacity = useSharedValue(0);
+  const cardScale = useSharedValue(0.95);
+
   const statsOpacity = useSharedValue(0);
+  const statsTranslate = useSharedValue(15);
+
   const buttonScale = useSharedValue(1);
 
   useFocusEffect(
     useCallback(() => {
-      // Reset
       screenOpacity.value = 0;
-      screenTranslate.value = 20;
+      screenTranslate.value = 40;
 
-      // Premium Entrance
-      screenOpacity.value = withTiming(1, { duration: 400, easing: Easing.out(Easing.cubic) });
-      screenTranslate.value = withTiming(0, { duration: 400, easing: Easing.out(Easing.cubic) });
-    }, [])
+      screenOpacity.value = withTiming(1, {
+        duration: 450,
+        easing: Easing.out(Easing.cubic),
+      });
+
+      screenTranslate.value = withTiming(0, {
+        duration: 450,
+        easing: Easing.out(Easing.cubic),
+      });
+    }, []),
   );
 
   const startProfileAnimations = () => {
-    avatarScale.value = 0.9;
+    avatarScale.value = 0.7;
+    avatarOpacity.value = 0;
     cardOpacity.value = 0;
+    cardScale.value = 0.95;
     statsOpacity.value = 0;
+    statsTranslate.value = 15;
 
-    // Trigger animations
-    avatarScale.value = withTiming(1, { duration: 500, easing: Easing.out(Easing.back(1.5)) });
-    cardOpacity.value = withTiming(1, { duration: 400, easing: Easing.out(Easing.cubic) });
-    statsOpacity.value = withDelay(100, withTiming(1, { duration: 400, easing: Easing.out(Easing.cubic) }));
+    avatarScale.value = withDelay(
+      100,
+      withTiming(1, {
+        duration: 500,
+        easing: Easing.out(Easing.back(1.7)),
+      }),
+    );
+
+    avatarOpacity.value = withDelay(100, withTiming(1, { duration: 400 }));
+
+    cardOpacity.value = withTiming(1, { duration: 400 });
+
+    cardScale.value = withTiming(1, {
+      duration: 450,
+      easing: Easing.out(Easing.cubic),
+    });
+
+    statsOpacity.value = withDelay(200, withTiming(1, { duration: 400 }));
+
+    statsTranslate.value = withDelay(200, withTiming(0, { duration: 400 }));
   };
 
   const fetchProfile = async () => {
@@ -88,7 +150,7 @@ export default function Profile() {
       }
 
       const repoRes = await fetch(
-        `https://api.github.com/users/${username}/repos`
+        `https://api.github.com/users/${username}/repos`,
       );
       const repos = await repoRes.json();
 
@@ -119,35 +181,38 @@ export default function Profile() {
     }
   };
 
-  // Animated Styles
+  /* Animated Styles */
+
   const containerStyle = useAnimatedStyle(() => ({
     flex: 1,
     opacity: screenOpacity.value,
     transform: [{ translateY: screenTranslate.value }],
   }));
 
+  const avatarStyle = useAnimatedStyle(() => ({
+    opacity: avatarOpacity.value,
+    transform: [{ scale: avatarScale.value }],
+  }));
+
+  const cardStyle = useAnimatedStyle(() => ({
+    opacity: cardOpacity.value,
+    transform: [{ scale: cardScale.value }],
+  }));
+
+  const statsStyle = useAnimatedStyle(() => ({
+    opacity: statsOpacity.value,
+    transform: [{ translateY: statsTranslate.value }],
+  }));
+
   const buttonStyle = useAnimatedStyle(() => ({
     transform: [{ scale: buttonScale.value }],
   }));
 
-  const avatarStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: avatarScale.value }],
-  }));
-
-  const profileCardStyle = useAnimatedStyle(() => ({
-    opacity: cardOpacity.value,
-  }));
-
-  const statsRowStyle = useAnimatedStyle(() => ({
-    opacity: statsOpacity.value,
-  }));
-
   return (
     <Animated.View style={containerStyle}>
-      <ScrollView style={styles.container}>
+      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
         <Text style={styles.title}>GitHub Profile Analyzer</Text>
 
-        {/* Input Card */}
         <View style={styles.card}>
           <Text style={styles.label}>GitHub Username</Text>
 
@@ -163,8 +228,12 @@ export default function Profile() {
           <Animated.View style={buttonStyle}>
             <Pressable
               style={styles.button}
-              onPressIn={() => (buttonScale.value = withTiming(0.95, { duration: 100, easing: Easing.out(Easing.quad) }))}
-              onPressOut={() => (buttonScale.value = withTiming(1, { duration: 150, easing: Easing.out(Easing.quad) }))}
+              onPressIn={() =>
+                (buttonScale.value = withTiming(0.94, { duration: 120 }))
+              }
+              onPressOut={() =>
+                (buttonScale.value = withTiming(1, { duration: 150 }))
+              }
               onPress={fetchProfile}
             >
               <Text style={styles.buttonText}>Analyze Profile</Text>
@@ -172,17 +241,12 @@ export default function Profile() {
           </Animated.View>
         </View>
 
-        {/* Loading */}
-        {loading && (
-          <ActivityIndicator size="large" style={{ marginTop: 25 }} />
-        )}
+        {loading && <ProfileSkeleton />}
 
-        {/* Error */}
         {error !== "" && <Text style={styles.error}>{error}</Text>}
 
-        {/* Profile Result */}
         {user && !loading && (
-          <Animated.View style={[styles.profileCard, profileCardStyle]}>
+          <Animated.View style={[styles.profileCard, cardStyle]}>
             <Animated.Image
               source={{ uri: user.avatar_url }}
               style={[styles.avatar, avatarStyle]}
@@ -192,7 +256,7 @@ export default function Profile() {
 
             {user.bio && <Text style={styles.bio}>{user.bio}</Text>}
 
-            <Animated.View style={[styles.statsRow, statsRowStyle]}>
+            <Animated.View style={[styles.statsRow, statsStyle]}>
               <View style={styles.statBox}>
                 <Text style={styles.statNumber}>{user.public_repos}</Text>
                 <Text style={styles.statLabel}>Repos</Text>
@@ -204,7 +268,7 @@ export default function Profile() {
               </View>
             </Animated.View>
 
-            <Animated.View style={[styles.statsRow, statsRowStyle]}>
+            <Animated.View style={[styles.statsRow, statsStyle]}>
               <View style={styles.statBox}>
                 <Text style={styles.statNumber}>{user.followers}</Text>
                 <Text style={styles.statLabel}>Followers</Text>
@@ -217,7 +281,9 @@ export default function Profile() {
             </Animated.View>
 
             <View style={styles.extraInfo}>
-              <Text style={styles.infoText}>💻 Top Language: {topLanguage}</Text>
+              <Text style={styles.infoText}>
+                💻 Top Language: {topLanguage}
+              </Text>
 
               <Text style={styles.infoText}>
                 📅 Joined: {new Date(user.created_at).toDateString()}
@@ -248,28 +314,28 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: "white",
     padding: 20,
-    borderRadius: 14,
-    elevation: 5,
+    borderRadius: 16,
+    elevation: 6,
   },
 
   label: {
     fontWeight: "600",
-    marginBottom: 5,
+    marginBottom: 6,
   },
 
   input: {
     borderWidth: 1,
-    borderColor: "#ccc",
-    backgroundColor: "#f9f9f9",
-    borderRadius: 8,
+    borderColor: "#ddd",
+    backgroundColor: "#fafafa",
+    borderRadius: 10,
     padding: 12,
-    marginBottom: 12,
+    marginBottom: 14,
   },
 
   button: {
     backgroundColor: "#007AFF",
     padding: 14,
-    borderRadius: 10,
+    borderRadius: 12,
     alignItems: "center",
   },
 
@@ -288,17 +354,17 @@ const styles = StyleSheet.create({
   profileCard: {
     marginTop: 25,
     backgroundColor: "white",
-    padding: 20,
-    borderRadius: 18,
+    padding: 22,
+    borderRadius: 20,
     alignItems: "center",
-    elevation: 8,
+    elevation: 10,
   },
 
   avatar: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    marginBottom: 10,
+    width: 110,
+    height: 110,
+    borderRadius: 60,
+    marginBottom: 12,
   },
 
   username: {
@@ -314,7 +380,7 @@ const styles = StyleSheet.create({
 
   statsRow: {
     flexDirection: "row",
-    marginTop: 15,
+    marginTop: 16,
   },
 
   statBox: {
@@ -333,12 +399,48 @@ const styles = StyleSheet.create({
   },
 
   extraInfo: {
-    marginTop: 15,
+    marginTop: 16,
   },
 
   infoText: {
     fontSize: 14,
     color: "#333",
-    marginTop: 5,
+    marginTop: 6,
+  },
+  skeletonAvatar: {
+    width: 110,
+    height: 110,
+    borderRadius: 60,
+    backgroundColor: "#e5e5e5",
+    marginBottom: 16,
+  },
+
+  skeletonLineLarge: {
+    width: 160,
+    height: 18,
+    backgroundColor: "#e5e5e5",
+    borderRadius: 6,
+    marginBottom: 10,
+  },
+
+  skeletonLineSmall: {
+    width: 200,
+    height: 14,
+    backgroundColor: "#e5e5e5",
+    borderRadius: 6,
+    marginBottom: 20,
+  },
+
+  skeletonStats: {
+    flexDirection: "row",
+    marginTop: 12,
+  },
+
+  skeletonStatBox: {
+    width: 70,
+    height: 40,
+    backgroundColor: "#e5e5e5",
+    borderRadius: 10,
+    marginHorizontal: 12,
   },
 });
