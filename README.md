@@ -73,8 +73,10 @@ A fully functional manual coding tracker:
 app/
  ├── index.tsx        → Home (Welcome + animations)
  ├── github.tsx       → GitHub Random Repo Explorer
+ ├── profile.tsx      → GitHub Profile Analyzer
  ├── tracker.tsx      → Coding Progress Tracker
  ├── _layout.tsx      → Tab Layout & Navigation
+
 components/
  └── CustomAlert.tsx
 
@@ -82,14 +84,15 @@ components/
 
 ## 📸 Screenshots
 
-### Home Screen  
-![Home](./assets/Screenshot_1772561889.png)
+<p align="center">
+  <img src="./assets/Screenshot_1772561889.png" width="220"/>
+  <img src="./assets/Screenshot_1772561884.png" width="220"/>
+</p>
 
-### GitHub Explorer  
-![GitHub](./assets/Screenshot_1772561884.png)
-
-### Random Repository Result  
-![Result](./assets/Screenshot_1772561894.png)
+<p align="center">
+  <img src="./assets/Screenshot_1772561894.png" width="220"/>
+  <img src="./assets/Screenshot_1773165174.png" width="220"/>
+</p>
 
 ---
 
