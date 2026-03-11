@@ -93,6 +93,21 @@ export default function TabLayout() {
           ),
         }}
       />
+
+      <Tabs.Screen
+        name="focus"
+        options={{
+          headerTitle: () => (
+            <View style={styles.headerTitleContainer}>
+              <Ionicons name="timer" size={20} color="#fff" />
+              <Text style={styles.headerText}> Dev Mode</Text>
+            </View>
+          ),
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="timer" color={color} size={size} />
+          ),
+        }}
+      />
     </Tabs>
   );
 }
