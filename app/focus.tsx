@@ -9,22 +9,9 @@ import Animated, {
   withSpring,
   withTiming,
 } from "react-native-reanimated";
+import { devQuotes } from "../data/devQuotes";
 
 const BREAK_TIME = 5 * 60;
-
-const quotes = [
-  { text: "Talk is cheap. Show me the code.", author: "Linus Torvalds" },
-  {
-    text: "Programs must be written for people to read.",
-    author: "Harold Abelson",
-  },
-  {
-    text: "First solve the problem, then write the code.",
-    author: "John Johnson",
-  },
-  { text: "Simplicity is the soul of efficiency.", author: "Austin Freeman" },
-  { text: "Code never lies, comments sometimes do.", author: "Ron Jeffries" },
-];
 
 export default function Focus() {
   const [focusMinutes, setFocusMinutes] = useState(25);
@@ -127,7 +114,7 @@ export default function Focus() {
     quoteTranslate.value = withTiming(-10, { duration: 200 });
 
     setTimeout(() => {
-      const random = Math.floor(Math.random() * quotes.length);
+      const random = Math.floor(Math.random() * devQuotes.length);
       setQuoteIndex(random);
 
       quoteTranslate.value = 10;
@@ -224,9 +211,12 @@ export default function Focus() {
           <Text style={styles.quoteTitle}>Developer Motivation</Text>
         </View>
 
-        <Text style={styles.quoteText}>“{quotes[quoteIndex].text}”</Text>
-
-        <Text style={styles.quoteAuthor}>— {quotes[quoteIndex].author}</Text>
+        <View style={styles.quoteContent}>
+          <Text style={styles.quoteText}>“{devQuotes[quoteIndex].text}”</Text>
+          <Text style={styles.quoteAuthor}>
+            — {devQuotes[quoteIndex].author}
+          </Text>
+        </View>
 
         <Pressable style={styles.quoteButton} onPress={changeQuote}>
           <Text style={styles.quoteButtonText}>New Quote</Text>
@@ -323,7 +313,12 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     padding: 24,
     borderRadius: 22,
+    minHeight: 240,
     elevation: 8,
+  },
+  quoteContent: {
+    flex: 1,
+    justifyContent: "center",
   },
 
   quoteHeader: {
